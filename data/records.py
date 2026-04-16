@@ -13,3 +13,5 @@ class Record(SqlAlchemyBase, UserMixin, SerializerMixin):
     category = orm.relationship("Category",
                                   secondary="association",
                                   backref="records")
+    price = sqlalchemy.Column(sqlalchemy.Integer)
+    user_id = sqlalchemy.Column(sqlalchemy.Integer,)
