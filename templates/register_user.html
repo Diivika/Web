@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow" style="border: none; border-radius: 15px;">
+                <div class="card-header text-white text-center" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-plus"></i> Регистрация
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form action="" method="post">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.surname.label(class="form-label fw-bold") }}
+                                {{ form.surname(class="form-control form-control-lg", placeholder="Иванов") }}
+                                {% for error in form.surname.errors %}
+                                    <div class="alert alert-danger mt-2">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.name.label(class="form-label fw-bold") }}
+                                {{ form.name(class="form-control form-control-lg", placeholder="Иван") }}
+                                {% for error in form.name.errors %}
+                                    <div class="alert alert-danger mt-2">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label fw-bold") }}
+                            {{ form.email(class="form-control form-control-lg", type="email", placeholder="ivan@example.com") }}
+                            {% for error in form.email.errors %}
+                                <div class="alert alert-danger mt-2">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label fw-bold") }}
+                            {{ form.password(class="form-control form-control-lg", type="password", placeholder="••••••") }}
+                            {% for error in form.password.errors %}
+                                <div class="alert alert-danger mt-2">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.password_again.label(class="form-label fw-bold") }}
+                            {{ form.password_again(class="form-control form-control-lg", type="password", placeholder="••••••") }}
+                            {% for error in form.password_again.errors %}
+                                <div class="alert alert-danger mt-2">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {% if message %}
+                            <div class="alert alert-warning">{{ message }}</div>
+                        {% endif %}
+
+                        {{ form.submit(type="submit", class="btn btn-primary w-100", style="background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%); border: none; padding: 12px; font-size: 18px; font-weight: bold;") }}
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-0">Уже есть аккаунт?
+                            <a href="/login" class="text-decoration-none">Войти</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
