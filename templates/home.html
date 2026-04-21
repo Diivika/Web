@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold">Добро пожаловать в BeautyWeb</h1>
+        <p class="lead mt-3">Стильные стрижки, борода и уход за собой</p>
+        <a href="/book" class="btn btn-primary btn-lg mt-3">
+            <i class="bi bi-calendar-check"></i> Записаться онлайн
+        </a>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-5">Наши услуги</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card service-card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-scissors fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Мужская стрижка</h5>
+                    <p class="card-text">Классические и современные стрижки любой сложности</p>
+                    <p class="fw-bold text-primary">от 1000 ₽</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card service-card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-gem fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Стрижка + борода</h5>
+                    <p class="card-text">Полный комплексный уход за образом</p>
+                    <p class="fw-bold text-primary">от 1800 ₽</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card service-card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-droplet fs-1 text-primary"></i>
+                    <h5 class="card-title mt-3">Королевское бритье</h5>
+                    <p class="card-text">Классическое бритье опасной бритвой</p>
+                    <p class="fw-bold text-primary">от 1200 ₽</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5 pt-5">
+    <div class="row text-center">
+        <div class="col-md-3">
+            <div class="stat">500+</div>
+            <p>Довольных клиентов</p>
+        </div>
+        <div class="col-md-3">
+            <div class="stat">5</div>
+            <p>Опытных барберов</p>
+        </div>
+        <div class="col-md-3">
+            <div class="stat">1000+</div>
+            <p>Выполненных стрижек</p>
+        </div>
+        <div class="col-md-3">
+            <div class="stat">4.9</div>
+            <p>Средняя оценка</p>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5 mb-5">
+    <h2 class="text-center mb-5">Почему выбирают нас</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="d-flex mb-4">
+                <i class="bi bi-check-circle-fill text-primary fs-3 me-3"></i>
+                <div>
+                    <h5>Профессиональные барберы</h5>
+                    <p class="text-muted">Опытные мастера с многолетним стажем</p>
+                </div>
+            </div>
+            <div class="d-flex mb-4">
+                <i class="bi bi-check-circle-fill text-primary fs-3 me-3"></i>
+                <div>
+                    <h5>Современное оборудование</h5>
+                    <p class="text-muted">Только качественные инструменты и материалы</p>
+                </div>
+            </div>
+            <div class="d-flex mb-4">
+                <i class="bi bi-check-circle-fill text-primary fs-3 me-3"></i>
+                <div>
+                    <h5>Удобное расположение</h5>
+                    <p class="text-muted">В центре города, рядом с метро</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex mb-4">
+                <i class="bi bi-check-circle-fill text-primary fs-3 me-3"></i>
+                <div>
+                    <h5>Онлайн запись 24/7</h5>
+                    <p class="text-muted">Запишитесь в любое удобное время</p>
+                </div>
+            </div>
+            <div class="d-flex mb-4">
+                <i class="bi bi-check-circle-fill text-primary fs-3 me-3"></i>
+                <div>
+                    <h5>Атмосфера</h5>
+                    <p class="text-muted">Уютный интерьер и дружелюбная обстановка</p>
+                </div>
+            </div>
+            <div class="d-flex mb-4">
+                <i class="bi bi-check-circle-fill text-primary fs-3 me-3"></i>
+                <div>
+                    <h5>Гарантия качества</h5>
+                    <p class="text-muted">100% удовлетворение результатом</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
