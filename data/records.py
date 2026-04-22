@@ -9,9 +9,6 @@ class Record(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'records'
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
-    date_time = sqlalchemy.Column(sqlalchemy.DateTime,)
-    category = orm.relationship("Category",
-                                  secondary="association",
-                                  backref="records")
+    date_time = sqlalchemy.Column(sqlalchemy.DateTime)
     price = sqlalchemy.Column(sqlalchemy.Integer)
-    user_id = sqlalchemy.Column(sqlalchemy.Integer,)
+    user_id = sqlalchemy.Column(sqlalchemy.Integer)
