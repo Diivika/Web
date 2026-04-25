@@ -87,12 +87,9 @@ def logout():
 
 
 @app.route('/book', methods=['GET', 'POST'])
+@login_required
 def book():
     form = RecordForm()
-
-    if not current_user.is_authenticated:
-        flash('Пожалуйста, зарегистрируйтесь или войдите, чтобы записаться', 'warning')
-        return redirect(url_for('login'))
 
     db_sess = db_session.create_session()
     styles = db_sess.query(Category).all()
@@ -113,6 +110,21 @@ def book():
             flash('Произошла ошибка при создании записи', 'danger')
 
     return render_template('record_user.html', title='Запись', form=form, styles=styles)
+
+
+@app.route('/usercard', methods=['GET'])
+@login_required
+def usercard():
+    db_sess = db_session.create_session()
+
+    record = db_sess.query(Record).filter(Record.user_id == current_user.id).first()
+
+    if record:
+        user_record = f"Ваша последняя запись в {record.date_time}"
+    else:
+        user_record = "У вас нет записей"
+
+    return render_template('usercard.html', user=current_user, user_record=user_record)
 
 
 if __name__ == '__main__':

@@ -2,7 +2,6 @@ import sqlalchemy
 from .db_session import SqlAlchemyBase
 from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy import orm
 
 
 class Record(SqlAlchemyBase, UserMixin, SerializerMixin):
@@ -10,5 +9,4 @@ class Record(SqlAlchemyBase, UserMixin, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     date_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    price = sqlalchemy.Column(sqlalchemy.Integer)
     user_id = sqlalchemy.Column(sqlalchemy.Integer)
