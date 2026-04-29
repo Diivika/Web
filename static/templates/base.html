@@ -26,6 +26,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/barbers">Барберы</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/location">Расположение</a>
+                    </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="/usercard">Личный кабинет</a>
@@ -41,6 +44,13 @@
                         <a class="nav-link btn btn-primary text-white px-3" href="/register">Регистрация</a>
                     </li>
                     {% endif %}
+                    <li class="nav-item">
+                    {% if current_user.is_authenticated and (current_user.id == 1) %}
+                        <div>
+                            <a class="nav-link btn btn-primary text-white px-3" href="/register_barber">Регистрация барбера</a>
+                        </div>
+                    {% endif %}
+                    </li>
                 </ul>
             </div>
         </div>

@@ -11,9 +11,12 @@ from data.users import User
 # from forms.book_form import BookingForm
 from data.records import Record
 from data.category import Category
+from data.barbers import Barber
 from forms.login_user_form import LoginForm
 from forms.record_user_form import RecordForm
+from forms.register_barber_form import RegisterBarberForm
 from forms.register_user_form import RegisterUserForm
+from help_functions.for_map import search_address, getImage
 
 db_session.global_init("db/beatyweb.db")
 db_sess = db_session.create_session()
@@ -125,6 +128,57 @@ def usercard():
         user_record = "У вас нет записей"
 
     return render_template('usercard.html', user=current_user, user_record=user_record)
+
+
+@app.route('/register_barber', methods=['GET', 'POST'])
+@login_required
+def register_barber():
+    try:
+        if current_user.id == 1:
+            form = RegisterBarberForm()
+            if form.validate_on_submit():
+                if form.password.data != form.password_again.data:
+                    return render_template('register_barber.html', title='Регистрация',
+                                           form=form,
+                                           message="Пароли не совпадают")
+                db_sess = db_session.create_session()
+                if db_sess.query(Barber).filter(Barber.email == form.email.data).first():
+                    return render_template('register_barber.html', title='Регистрация',
+                                           form=form,
+                                           message="Такой пользователь уже есть")
+                try:
+                    barber = Barber(
+                        email=form.email.data,
+                        surname=form.surname.data,
+                        name=form.name.data,
+                        address=form.address,
+                        city_from=form.city_from
+                    )
+                    barber.set_password(form.password.data)
+                    db_sess.add(barber)
+                    db_sess.commit()
+                    return redirect('/login')
+                except Exception as e:
+                    print(e)
+                    return 'Oops, something dont work'
+            return render_template('register_barber.html', title='Регистрация', form=form)
+        else:
+            return render_template('error_403.html', title='Error 403')
+    except Exception:
+        return render_template('error_500.html', title='Error 500')
+
+
+@app.route('/location', methods=['GET', 'POST'])
+def location():
+    res = search_address('Тверской бул., 24, стр. 1')
+    link = getImage(res)
+    return render_template('location.html', link=link)
+
+@app.route('/barbers', methods=['GET', 'POST'])
+def barbers():
+    return render_template('error_500.html', title='Error 500')
+
+
 
 
 if __name__ == '__main__':
