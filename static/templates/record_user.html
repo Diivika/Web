@@ -5,9 +5,9 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow" style="border: none; border-radius: 15px;">
-                <div class="card-header bg-primary text-white text-center" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
+                <div class="card-header text-white text-center" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
                     <h4 class="mb-0">
-                        <i class="bi bi-box-arrow-in-right"></i> Запись на стрижку
+                        <i class="bi bi-calendar-check"></i> Запись на стрижку
                     </h4>
                 </div>
                 <div class="card-body p-4">
@@ -16,33 +16,28 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Выберите стиль стрижки</label>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Выберите стиль
-                                </button>
-                                <ul class="dropdown-menu w-100">
-                                    {% for style in styles %}
-                                        <li><a class="dropdown-item" href="#">{{ style }}</a></li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
+                            {{ form.category(class="form-select form-control-lg") }}
+                            {% for error in form.category.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
 
-                        </div>
                         <div class="mb-3">
-                            {{ form.date.label(class="form-label fw-bold") }}
-                            {{ form.date(class="form-control form-control-lg", type="date", placeholder="01.01.2000") }}
+                            <label class="form-label fw-bold">Дата стрижки</label>
+                            {{ form.date_time(class="form-control form-control-lg", type="datetime-local") }}
+                            {% for error in form.date_time.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
                         </div>
+
                         {% if message %}
                             <div class="alert alert-warning" role="alert">
                                 <i class="bi bi-exclamation-triangle"></i> {{ message }}
                             </div>
                         {% endif %}
 
-                        {{ form.submit(type="submit", class="btn btn-primary w-100", style="background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%); border: none; padding: 12px; font-size: 18px; font-weight: bold;") }}
+                        {{ form.submit(class="btn btn-primary w-100", style="background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%); border: none; padding: 12px; font-size: 18px; font-weight: bold;") }}
                     </form>
-
-                    <div class="text-center">
-                    </div>
                 </div>
             </div>
         </div>

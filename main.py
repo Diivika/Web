@@ -1,3 +1,4 @@
+import datetime
 import os
 from flask import Flask, url_for, request, render_template, redirect, abort, jsonify, flash
 import json
@@ -30,7 +31,10 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
-    return db_sess.get(User, user_id)
+    user = db_sess.query(Barber).filter(Barber.id == int(user_id)).first()
+    if not user:
+        user = db_sess.query(User).filter(User.id == int(user_id)).first()
+    return user
 
 
 @app.route('/')
@@ -44,20 +48,25 @@ def login():
         form = LoginForm()
         if form.validate_on_submit():
             db_sess = db_session.create_session()
-            user = db_sess.query(User).filter(User.email == form.email.data).first()
+            user = db_sess.query(Barber).filter(Barber.email == form.email.data).first()
+            if not user:
+                user = db_sess.query(User).filter(User.email == form.email.data).first()
             if user and user.check_password(form.password.data):
                 login_user(user, remember=form.remember_me.data)
-                return redirect("/")
-            return render_template('login.html',
-                                   message="Неправильный логин или пароль",
-                                   form=form)
+                if user.is_barber:
+                    return redirect(url_for('barber_card'))
+                else:
+                    return redirect(url_for('usercard'))
+            flash('Неправильный логин или пароль', 'danger')
+            return render_template('login.html', title='Авторизация', form=form)
+
         return render_template('login.html', title='Авторизация', form=form)
     else:
         return render_template('error_already_login.html', title='Уже зашел')
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def reqister():
+def register():
     if not current_user.is_authenticated:
         form = RegisterUserForm()
         if form.validate_on_submit():
@@ -67,6 +76,10 @@ def reqister():
                                        message="Пароли не совпадают")
             db_sess = db_session.create_session()
             if db_sess.query(User).filter(User.email == form.email.data).first():
+                return render_template('register_user.html', title='Регистрация',
+                                       form=form,
+                                       message="Такой пользователь уже есть")
+            if db_sess.query(Barber).filter(Barber.email == form.email.data).first():
                 return render_template('register_user.html', title='Регистрация',
                                        form=form,
                                        message="Такой пользователь уже есть")
@@ -96,44 +109,51 @@ def logout():
 
 
 @app.route('/book', methods=['GET', 'POST'])
-@login_required
 def book():
-    form = RecordForm()
+    if current_user.is_authenticated:
+        form = RecordForm()
+        db_sess = db_session.create_session()
+        categories = db_sess.query(Category).all()
+        form.category.choices = [(c.id, c.name) for c in categories]
+        if request.method == 'POST' and form.validate_on_submit():
+            try:
+                record = Record(
+                    date_time=form.date_time.data,
+                    user_id=current_user.id,
+                )
+                category = db_sess.query(Category).get(form.category.data)
+                if category:
+                    record.category.append(category)
+                db_sess.add(record)
+                db_sess.commit()
+                flash('Запись успешно создана!', 'success')
+                return redirect('/')
+            except Exception as e:
+                db_sess.rollback()
+                print(e)
+                flash('Произошла ошибка при создании записи', 'danger')
 
-    db_sess = db_session.create_session()
-    styles = db_sess.query(Category).all()
-
-    if request.method == 'POST':
-        try:
-            record = Record(
-                date_time=form.date.data,
-                user_id=current_user.id,
-            )
-            db_sess.add(record)
-            db_sess.commit()
-            flash('Запись успешно создана!', 'success')
-            return redirect('/')
-        except Exception as e:
-            db_sess.rollback()
-            print(e)
-            flash('Произошла ошибка при создании записи', 'danger')
-
-    return render_template('record_user.html', title='Запись', form=form, styles=styles)
+        return render_template('record_user.html', title='Запись', form=form, styles=categories)
+    else:
+        return render_template('error_book.html', title='Error')
 
 
 @app.route('/usercard', methods=['GET'])
-@login_required
 def usercard():
-    db_sess = db_session.create_session()
-
-    record = db_sess.query(Record).filter(Record.user_id == current_user.id).first()
-
-    if record:
-        user_record = f"Ваша последняя запись в {record.date_time}"
+    if current_user.is_authenticated:
+        db_sess = db_session.create_session()
+        records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()
+        all_records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()
+        now = datetime.datetime.now()
+        active_records = [r for r in all_records if r.date_time > now]
+        inactive_records = [r for r in all_records if r.date_time <= now]
+        return render_template('usercard.html',
+                               user=current_user,
+                               active_records=active_records,
+                               inactive_records=inactive_records,
+                               now=datetime.datetime.now())
     else:
-        user_record = "У вас нет записей"
-
-    return render_template('usercard.html', user=current_user, user_record=user_record)
+        return render_template('no_reg_no_log_error.html', title='Error')
 
 
 @app.route('/register_barber', methods=['GET', 'POST'])
@@ -148,8 +168,12 @@ def register_barber():
                                            form=form,
                                            message="Пароли не совпадают")
                 db_sess = db_session.create_session()
+                if db_sess.query(User).filter(User.email == form.email.data).first():
+                    return render_template('register_user.html', title='Регистрация',
+                                           form=form,
+                                           message="Такой пользователь уже есть")
                 if db_sess.query(Barber).filter(Barber.email == form.email.data).first():
-                    return render_template('register_barber.html', title='Регистрация',
+                    return render_template('register_user.html', title='Регистрация',
                                            form=form,
                                            message="Такой пользователь уже есть")
                 try:
@@ -157,13 +181,14 @@ def register_barber():
                         email=form.email.data,
                         surname=form.surname.data,
                         name=form.name.data,
-                        address=form.address,
-                        city_from=form.city_from
+                        address=form.address.data,
+                        city_from=form.city_from.data,
+                        is_barber=True
                     )
                     barber.set_password(form.password.data)
                     db_sess.add(barber)
                     db_sess.commit()
-                    return redirect('/login')
+                    return redirect('/')
                 except Exception as e:
                     print(e)
                     return 'Oops, something dont work'
@@ -180,11 +205,27 @@ def location():
     link = getImage(res)
     return render_template('location.html', link=link)
 
+
 @app.route('/barbers', methods=['GET', 'POST'])
 def barbers():
     return render_template('error_500.html', title='Error 500')
 
 
+@app.route('/barber_card')
+@login_required
+def barber_card():
+    if not current_user.is_barber:
+        flash('Доступ запрещён', 'danger')
+        return redirect(url_for('index'))
+    db_sess = db_session.create_session()
+    now = datetime.datetime.now()
+    records = db_sess.query(Record).filter(
+        Record.date_time > now
+    ).all()
+
+    return render_template('barber_card.html',
+                           barber=current_user,
+                           records=records)
 
 
 if __name__ == '__main__':

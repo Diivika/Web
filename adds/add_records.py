@@ -48,7 +48,7 @@ def add_records():
         record_date = start_date + datetime.timedelta(days=i % 20, hours=random.randint(0, 12))
         record = Record(
             date_time=record_date,
-            price=price,
+            category=cat.name,
             user_id=user_id
         )
         record.category.append(cat)

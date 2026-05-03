@@ -20,6 +20,7 @@ class Barber(SqlAlchemyBase, UserMixin, SerializerMixin):
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     modified_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                       default=datetime.datetime.now)
+    is_barber = sqlalchemy.Column(sqlalchemy.Boolean, default=True)
     # telegram_tag = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     # telegram_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
 
