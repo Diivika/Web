@@ -21,6 +21,8 @@ class Barber(SqlAlchemyBase, UserMixin, SerializerMixin):
     modified_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                       default=datetime.datetime.now)
     is_barber = sqlalchemy.Column(sqlalchemy.Boolean, default=True)
+    info = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     # telegram_tag = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     # telegram_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
 

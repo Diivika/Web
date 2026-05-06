@@ -17,7 +17,6 @@ def add_categories():
         'Европейская стрижка',
         'Бразильская стрижка',
         'Комбинированная стрижка',
-        'Моделирование стрижки'
     ]
     for elem in categories:
         category = Category()

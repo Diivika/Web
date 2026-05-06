@@ -12,7 +12,7 @@
                     <p class="mb-0 mt-2 small">Только для администратора</p>
                 </div>
                 <div class="card-body p-4">
-                    <form action="" method="post">
+                    <form action="" method="post" enctype="multipart/form-data">
                         {{ form.hidden_tag() }}
 
                         <div class="row">
@@ -59,6 +59,32 @@
                             </div>
                         </div>
 
+                        <!-- НОВОЕ ПОЛЕ: Информация о барбере -->
+                        <div class="mb-3">
+                            {{ form.info.label(class="form-label fw-bold") }}
+                            {{ form.info(class="form-control form-control-lg", rows="3", placeholder="Опыт работы, специализация, достижения...") }}
+                            {% for error in form.info.errors %}
+                                <div class="alert alert-danger mt-2 small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- НОВОЕ ПОЛЕ: Загрузка фото -->
+                        <div class="mb-3">
+                            {{ form.image.label(class="form-label fw-bold") }}
+                            {{ form.image(class="form-control form-control-lg", accept="image/*") }}
+                            <small class="text-muted">Поддерживаемые форматы: JPG, PNG, GIF. Максимум 5MB</small>
+                            {% for error in form.image.errors %}
+                                <div class="alert alert-danger mt-2 small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Превью фото (опционально) -->
+                        <div class="mb-3 text-center" id="previewContainer" style="display: none;">
+                            <label class="form-label fw-bold">Превью</label>
+                            <br>
+                            <img id="imagePreview" src="#" alt="Превью" style="max-width: 150px; max-height: 150px; border-radius: 10px;">
+                        </div>
+
                         <div class="mb-3">
                             {{ form.password.label(class="form-label fw-bold") }}
                             {{ form.password(class="form-control form-control-lg", type="password", placeholder="••••••") }}
@@ -90,4 +116,26 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Превью фото перед отправкой
+    const imageInput = document.querySelector('input[type="file"]');
+    const previewContainer = document.getElementById('previewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+
+    imageInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                previewContainer.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            previewContainer.style.display = 'none';
+            imagePreview.src = '#';
+        }
+    });
+</script>
 {% endblock %}

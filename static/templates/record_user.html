@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
+<div class="container mt-4">
+    <div class="row">
+        <!-- Левая колонка - форма записи -->
+        <div class="col-md-5 mb-4">
             <div class="card shadow" style="border: none; border-radius: 15px;">
                 <div class="card-header text-white text-center" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
                     <h4 class="mb-0">
@@ -11,36 +12,130 @@
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <form action="" method="post">
+                    <form method="POST">
                         {{ form.hidden_tag() }}
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Выберите стиль стрижки</label>
-                            {{ form.category(class="form-select form-control-lg") }}
-                            {% for error in form.category.errors %}
-                                <div class="text-danger small mt-1">{{ error }}</div>
-                            {% endfor %}
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-scissors"></i> Выберите услугу
+                            </label>
+                            <select name="category" id="serviceSelect" class="form-select form-control-lg" required>
+                                <option value="">-- Выберите услугу --</option>
+                                {% for style in styles %}
+                                    <option value="{{ style.id }}">{{ style.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Дата стрижки</label>
-                            {{ form.date_time(class="form-control form-control-lg", type="datetime-local") }}
-                            {% for error in form.date_time.errors %}
-                                <div class="text-danger small mt-1">{{ error }}</div>
-                            {% endfor %}
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-calendar"></i> Дата и время
+                            </label>
+                            <input type="datetime-local" name="date_time" class="form-control form-control-lg" required>
                         </div>
 
                         {% if message %}
-                            <div class="alert alert-warning" role="alert">
-                                <i class="bi bi-exclamation-triangle"></i> {{ message }}
-                            </div>
+                            <div class="alert alert-warning">{{ message }}</div>
                         {% endif %}
 
-                        {{ form.submit(class="btn btn-primary w-100", style="background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%); border: none; padding: 12px; font-size: 18px; font-weight: bold;") }}
+                        <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%); border: none; padding: 12px; font-size: 18px; font-weight: bold;">
+                            <i class="bi bi-check-circle"></i> Записаться
+                        </button>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7 mb-4">
+            <div class="card shadow" style="border: none; border-radius: 15px;">
+                <div class="card-header text-white" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
+                    <h5 class="mb-0">
+                        <i class="bi bi-images"></i> Наши работы
+                    </h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-3">
+                        {% for style in styles %}
+                        <div class="col-6 col-md-4">
+                            <div class="card service-card border-0 shadow-sm h-100" data-service="{{ style.name }}" data-service-id="{{ style.id }}">
+                                <img src="{{ url_for('static', filename='images/haircuts/' ~ style.name|replace(' ', '_')|lower ~ '.jpg') }}"
+                                     class="card-img-top rounded"
+                                     alt="{{ style.name }}"
+                                     style="height: 150px; object-fit: contain; background-color: #f8f9fa; padding: 5px;"
+                                     onerror="this.src='https://placehold.co/300x300/2c3e50/white?text={{ style.name|urlencode }}'">
+                                <div class="card-body text-center p-2">
+                                    <small class="fw-bold">{{ style.name }}</small>
+                                    <br>
+                                    <small class="text-primary">
+                                        от {% if 'Мужская' in style.name %}1000
+                                        {% elif 'Женская' in style.name %}1500
+                                        {% elif 'Детская' in style.name %}800
+                                        {% elif 'Моделирование' in style.name %}1500
+                                        {% elif 'Текстурирование' in style.name %}1300
+                                        {% else %}1000{% endif %} ₽
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .service-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+    }
+
+    .service-card.selected {
+        border: 2px solid #0d6efd !important;
+        box-shadow: 0 5px 15px rgba(13,110,253,0.2) !important;
+    }
+
+    .carousel-caption {
+        background: rgba(0,0,0,0.5);
+        border-radius: 10px;
+        padding: 10px;
+    }
+</style>
+
+<script>
+    document.querySelectorAll('.service-card').forEach(card => {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.service-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+            this.classList.add('selected');
+
+            const serviceId = this.getAttribute('data-service-id');
+            const select = document.getElementById('serviceSelect');
+
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value == serviceId) {
+                    select.selectedIndex = i;
+                    break;
+                }
+            }
+        });
+    });
+
+    // Минимальная дата - завтра
+    const datetimeInput = document.querySelector('input[type="datetime-local"]');
+    if (datetimeInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(10, 0, 0, 0);
+        const minDateTime = tomorrow.toISOString().slice(0, 16);
+        datetimeInput.min = minDateTime;
+    }
+</script>
 {% endblock %}

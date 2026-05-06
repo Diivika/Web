@@ -1,5 +1,7 @@
 import datetime
 import os
+from pprint import pprint
+
 from flask import Flask, url_for, request, render_template, redirect, abort, jsonify, flash
 import json
 from flask import make_response
@@ -7,7 +9,9 @@ from requests import get
 from flask_login import LoginManager, login_user
 from flask_login import login_required, logout_user, current_user
 from flask_restful import reqparse, abort, Api, Resource
-from data import db_session
+from werkzeug.utils import secure_filename
+
+from data import db_session, barbers_api
 from data.users import User
 # from forms.book_form import BookingForm
 from data.records import Record
@@ -169,13 +173,19 @@ def register_barber():
                                            message="Пароли не совпадают")
                 db_sess = db_session.create_session()
                 if db_sess.query(User).filter(User.email == form.email.data).first():
-                    return render_template('register_user.html', title='Регистрация',
+                    return render_template('register_barber.html', title='Регистрация',
                                            form=form,
                                            message="Такой пользователь уже есть")
                 if db_sess.query(Barber).filter(Barber.email == form.email.data).first():
-                    return render_template('register_user.html', title='Регистрация',
+                    return render_template('register_barber.html', title='Регистрация',
                                            form=form,
                                            message="Такой пользователь уже есть")
+
+                filename = None
+                if form.image.data:
+                    file = form.image.data
+                    filename = secure_filename(f"{form.surname.data}_{form.name.data}_{file.filename}")
+                    file.save(os.path.join('static/images/barbers', filename))
                 try:
                     barber = Barber(
                         email=form.email.data,
@@ -183,6 +193,8 @@ def register_barber():
                         name=form.name.data,
                         address=form.address.data,
                         city_from=form.city_from.data,
+                        info=form.info.data,
+                        image=filename,
                         is_barber=True
                     )
                     barber.set_password(form.password.data)
@@ -201,14 +213,17 @@ def register_barber():
 
 @app.route('/location', methods=['GET', 'POST'])
 def location():
-    res = search_address('Тверской бул., 24, стр. 1')
-    link = getImage(res)
-    return render_template('location.html', link=link)
+    return render_template('location.html')
 
 
 @app.route('/barbers', methods=['GET', 'POST'])
 def barbers():
-    return render_template('error_500.html', title='Error 500')
+    try:
+        data = get(f'http://localhost:8080/api/barbers').json()
+        barbers_list = data.get('barbers', [])
+        return render_template('barbers.html', barbers=barbers_list)
+    except Exception:
+        return render_template('error_500.html', title='Error 500')
 
 
 @app.route('/barber_card')
@@ -227,7 +242,18 @@ def barber_card():
                            barber=current_user,
                            records=records)
 
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+@app.errorhandler(400)
+def bad_request(_):
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 if __name__ == '__main__':
+    os.makedirs('static/images/barbers', exist_ok=True)
+    os.makedirs('db', exist_ok=True)
     db_session.global_init("db/beatyweb.db")
+    app.register_blueprint(barbers_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
