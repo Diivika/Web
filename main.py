@@ -1,19 +1,14 @@
 import datetime
 import os
-from pprint import pprint
-
 from flask import Flask, url_for, request, render_template, redirect, abort, jsonify, flash
-import json
 from flask import make_response
 from requests import get
 from flask_login import LoginManager, login_user
 from flask_login import login_required, logout_user, current_user
-from flask_restful import reqparse, abort, Api, Resource
+from flask_restful import Api
 from werkzeug.utils import secure_filename
-
 from data import db_session, barbers_api
 from data.users import User
-# from forms.book_form import BookingForm
 from data.records import Record
 from data.category import Category
 from data.barbers import Barber
@@ -21,7 +16,6 @@ from forms.login_user_form import LoginForm
 from forms.record_user_form import RecordForm
 from forms.register_barber_form import RegisterBarberForm
 from forms.register_user_form import RegisterUserForm
-from help_functions.for_map import search_address, getImage
 
 db_session.global_init("db/beatyweb.db")
 db_sess = db_session.create_session()
