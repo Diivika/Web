@@ -138,7 +138,7 @@ def book():
 
 @app.route('/usercard', methods=['GET'])
 def usercard():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and current_user.is_barber:
         db_sess = db_session.create_session()
         records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()
         all_records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()

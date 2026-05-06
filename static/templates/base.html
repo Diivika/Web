@@ -33,11 +33,11 @@
                     {% if current_user.is_authenticated %}
                         {% if not current_user.is_barber %}
                             <li class="nav-item">
-                                <a class="nav-link" href="/usercard">Личный кабинет</a>
+                                <a class="nav-link" href="/barber_card">Кабинет барбера</a>
                             </li>
                         {% else %}
                             <li class="nav-item">
-                                <a class="nav-link" href="/barber_card">Кабинет барбера</a>
+                                <a class="nav-link" href="/usercard">Личный кабинет</a>
                             </li>
                         {% endif %}
                         <li class="nav-item">
