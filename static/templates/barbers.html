@@ -15,7 +15,7 @@
             <div class="card shadow h-100" style="border: none; border-radius: 15px; overflow: hidden; transition: transform 0.3s ease;">
                 <div class="text-center pt-3" style="background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);">
                     {% if barber.image %}
-                        <img src="{{ url_for('static', filename='images/barbers/' + barber.image) }}" 
+                        <img src="{{ url_for('static', filename='images/barbers/' + barber.image) }}"
                              alt="{{ barber.name }} {{ barber.surname }}"
                              style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid white;">
                     {% else %}
@@ -24,7 +24,7 @@
                         </div>
                     {% endif %}
                 </div>
-                
+
                 <div class="card-body text-center">
                     <h4 class="card-title fw-bold mb-1">{{ barber.name }} {{ barber.surname }}</h4>
                     {% if barber.info %}
@@ -42,6 +42,11 @@
                         <a href="/barber_portfolio/{{ barber.id }}" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-images"></i> Портфолио
                         </a>
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteBarber({{ barber.id }})">
+                                <i class="bi bi-trash"></i> Удалить барбера
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -60,4 +65,29 @@
         transform: translateY(-10px);
     }
 </style>
+
+<script>
+function deleteBarber(barberId) {
+    if (confirm('Вы уверены, что хотите удалить этого барбера? Это действие нельзя отменить.')) {
+        fetch(`/delete_barber/${barberId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при удалении: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при удалении');
+        });
+    }
+}
+</script>
 {% endblock %}

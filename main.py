@@ -16,6 +16,7 @@ from forms.login_user_form import LoginForm
 from forms.record_user_form import RecordForm
 from forms.register_barber_form import RegisterBarberForm
 from forms.register_user_form import RegisterUserForm
+import shutil
 
 db_session.global_init("db/beatyweb.db")
 db_sess = db_session.create_session()
@@ -27,12 +28,15 @@ login_manager.init_app(app)
 
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(compound_id):
     db_sess = db_session.create_session()
-    user = db_sess.query(Barber).filter(Barber.id == int(user_id)).first()
-    if not user:
-        user = db_sess.query(User).filter(User.id == int(user_id)).first()
-    return user
+    if compound_id.startswith('barber_'):
+        real_id = int(compound_id.replace('barber_', ''))
+        return db_sess.query(Barber).get(real_id)
+    elif compound_id.startswith('user_'):
+        real_id = int(compound_id.replace('user_', ''))
+        return db_sess.query(User).get(real_id)
+    return None
 
 
 @app.route('/')
@@ -49,12 +53,14 @@ def login():
             user = db_sess.query(Barber).filter(Barber.email == form.email.data).first()
             if not user:
                 user = db_sess.query(User).filter(User.email == form.email.data).first()
+
             if user and user.check_password(form.password.data):
                 login_user(user, remember=form.remember_me.data)
-                if user.is_barber:
+                if hasattr(user, 'is_barber') and user.is_barber:
                     return redirect(url_for('barber_card'))
                 else:
                     return redirect(url_for('usercard'))
+
             flash('Неправильный логин или пароль', 'danger')
             return render_template('login.html', title='Авторизация', form=form)
 
@@ -287,6 +293,29 @@ def delete_photo(barber_id, photo_name):
         os.remove(photo_path)
         return jsonify({'success': True})
     return jsonify({'success': False})
+
+
+@app.route('/delete_barber/<int:barber_id>', methods=['POST'])
+@login_required
+def delete_barber(barber_id):
+    if not current_user.is_admin:
+        return render_template('error_403.html', title='Error 403')
+    db_sess = db_session.create_session()
+    barber = db_sess.query(Barber).get(barber_id)
+    try:
+        if barber.image:
+            image_path = os.path.join('static/images/barbers', barber.image)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        portfolio_path = os.path.join('static/images/barbers_portfolio', str(barber_id))
+        if os.path.exists(portfolio_path):
+            shutil.rmtree(portfolio_path)
+        db_sess.delete(barber)
+        db_sess.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(e)
+        return render_template('error_500.html', title='Error 500')
 
 
 if __name__ == '__main__':
