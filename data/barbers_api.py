@@ -17,7 +17,7 @@ def get_barbers():
     return jsonify(
         {
             'barbers':
-                [item.to_dict(only=('surname', 'name', 'image', 'info'))
+                [item.to_dict(only=('id', 'surname', 'name', 'image', 'info'))
                  for item in barbers]
         }
     )

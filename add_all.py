@@ -7,4 +7,5 @@ from adds.add_records import add_records
 if __name__ == '__main__':
     insert_barbers()
     insert_users()
+    insert_administrators()
     add_categories()

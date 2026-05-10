@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <a href="/barbers" class="btn btn-outline-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Назад к барберам
+            </a>
+
+            <!-- Кнопка добавить фото - только для этого барбера -->
+            {% if current_user.is_authenticated and current_user.id == barber.id %}
+            <button type="button" class="btn btn-success mb-3 ms-2" data-bs-toggle="modal" data-bs-target="#addPhotoModal">
+                <i class="bi bi-plus-circle"></i> Добавить фото
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center mb-4">
+        <h2 class="fw-bold" style="color: #2c3e50;">
+            <i class="bi bi-images"></i> Портфолио {{ barber.name }} {{ barber.surname }}
+        </h2>
+        <p class="text-muted">Наши работы</p>
+    </div>
+
+    <div class="row g-4">
+        {% if photos %}
+            {% for photo in photos %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card shadow h-100" style="border: none; border-radius: 15px; overflow: hidden;">
+                    <img src="{{ url_for('static', filename='images/barbers_portfolio/' + barber.id|string + '/' + photo) }}"
+                         class="card-img-top"
+                         alt="Работа барбера"
+                         style="height: 250px; width: 100%; object-fit: cover; cursor: pointer;"
+                         onclick="openModal('{{ url_for('static', filename='images/barbers_portfolio/' + barber.id|string + '/' + photo) }}')">
+                    <div class="card-body text-center">
+                        <small class="text-muted">{{ barber.name }} {{ barber.surname }}</small>
+                        {% if current_user.is_authenticated and current_user.id == barber.id %}
+                        <br>
+                        <button class="btn btn-sm btn-outline-danger mt-2" onclick="deletePhoto('{{ photo }}', {{ barber.id }})">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-folder2-open fs-1 text-muted"></i>
+                <p class="text-muted mt-3">Портфолио пока пусто</p>
+                {% if current_user.is_authenticated and current_user.id == barber.id %}
+                    <p class="text-muted small">Нажмите "Добавить фото", чтобы загрузить свои работы</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно для добавления фото -->
+<div class="modal fade" id="addPhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить фото в портфолио</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('add_photo', barber_id=barber.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">Выберите фото</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Загрузить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра фото -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Портфолио {{ barber.name }} {{ barber.surname }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Фото работы" style="max-width: 100%; max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+
+function deletePhoto(photoName, barberId) {
+    if (confirm('Удалить это фото?')) {
+        fetch(`/delete_photo/${barberId}/${photoName}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert('Ошибка при удалении');
+            });
+    }
+}
+</script>
+{% endblock %}

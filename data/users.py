@@ -19,6 +19,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     modified_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                       default=datetime.datetime.now)
     is_barber = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
+    is_admin = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
     # telegram_tag = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     # telegram_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
 

@@ -35,9 +35,14 @@
                         <p class="card-text text-muted small">Опытный мастер</p>
                     {% endif %}
                     <hr>
-                    <a href="/book" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #2c3e50, #1a252f); border: none;">
-                        <i class="bi bi-calendar-check"></i> Записаться
-                    </a>
+                    <div class="d-grid gap-2">
+                        <a href="/book" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #2c3e50, #1a252f); border: none;">
+                            <i class="bi bi-calendar-check"></i> Записаться
+                        </a>
+                        <a href="/barber_portfolio/{{ barber.id }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-images"></i> Портфолио
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

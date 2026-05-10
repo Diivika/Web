@@ -31,7 +31,7 @@
                     </li>
 
                     {% if current_user.is_authenticated %}
-                        {% if not current_user.is_barber %}
+                        {% if current_user.is_barber %}
                             <li class="nav-item">
                                 <a class="nav-link" href="/barber_card">Кабинет барбера</a>
                             </li>
@@ -51,8 +51,7 @@
                             <a class="nav-link btn btn-primary text-white px-3" href="/register">Регистрация</a>
                         </li>
                     {% endif %}
-
-                    {% if current_user.is_authenticated and current_user.id == 1 %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
                         <li class="nav-item">
                             <a class="nav-link btn btn-primary text-white px-3" href="/register_barber">Регистрация барбера</a>
                         </li>

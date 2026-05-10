@@ -138,7 +138,7 @@ def book():
 
 @app.route('/usercard', methods=['GET'])
 def usercard():
-    if current_user.is_authenticated and current_user.is_barber:
+    if current_user.is_authenticated:
         db_sess = db_session.create_session()
         records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()
         all_records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()
@@ -158,7 +158,7 @@ def usercard():
 @login_required
 def register_barber():
     try:
-        if current_user.id == 1:
+        if current_user.is_admin:
             form = RegisterBarberForm()
             if form.validate_on_submit():
                 if form.password.data != form.password_again.data:
@@ -194,6 +194,8 @@ def register_barber():
                     barber.set_password(form.password.data)
                     db_sess.add(barber)
                     db_sess.commit()
+                    os.makedirs(os.path.join('static/images', 'barbers_portfolio'), exist_ok=True)
+                    os.makedirs(os.path.join('static/images/barbers_portfolio', str(barber.id)), exist_ok=True)
                     return redirect('/')
                 except Exception as e:
                     print(e)
@@ -224,8 +226,7 @@ def barbers():
 @login_required
 def barber_card():
     if not current_user.is_barber:
-        flash('Доступ запрещён', 'danger')
-        return redirect(url_for('index'))
+        return render_template('error_403.html', title='Error 403')
     db_sess = db_session.create_session()
     now = datetime.datetime.now()
     records = db_sess.query(Record).filter(
@@ -236,6 +237,7 @@ def barber_card():
                            barber=current_user,
                            records=records)
 
+
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
@@ -244,6 +246,48 @@ def not_found(error):
 @app.errorhandler(400)
 def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
+
+
+@app.route('/barber_portfolio/<int:id>', methods=['GET', 'POST'])
+def portfolio(id):
+    db_sess = db_session.create_session()
+    barber = db_sess.query(Barber).get(id)
+    portfolio_path = os.path.join('static/images/barbers_portfolio', str(id))
+    if os.path.exists(portfolio_path):
+        photos = os.listdir(portfolio_path)
+        photos = [f for f in photos if f.endswith(('.jpg', '.png', '.jpeg', '.gif'))]
+    return render_template('portfolio.html', photos=photos, barber=barber)
+
+
+@app.route('/add_photo/<int:barber_id>', methods=['POST'])
+@login_required
+def add_photo(barber_id):
+    if current_user.id != barber_id and not current_user.is_admin:
+        return render_template('error_403.html', title='Error 403')
+    if 'photo' not in request.files:
+        return redirect(url_for('portfolio', id=barber_id))
+    file = request.files['photo']
+    if file.filename == '':
+        return redirect(url_for('portfolio', id=barber_id))
+    if file:
+        filename = secure_filename(f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
+        portfolio_path = os.path.join('static/images/barbers_portfolio', str(barber_id))
+        os.makedirs(portfolio_path, exist_ok=True)
+        file.save(os.path.join(portfolio_path, filename))
+    return redirect(url_for('portfolio', id=barber_id))
+
+
+@app.route('/delete_photo/<int:barber_id>/<path:photo_name>', methods=['POST'])
+@login_required
+def delete_photo(barber_id, photo_name):
+    if current_user.id != barber_id and not current_user.is_admin:
+        return render_template('error_403.html', title='Error 403')
+    photo_path = os.path.join('static/images/barbers_portfolio', str(barber_id), photo_name)
+    if os.path.exists(photo_path):
+        os.remove(photo_path)
+        return jsonify({'success': True})
+    return jsonify({'success': False})
+
 
 if __name__ == '__main__':
     os.makedirs('static/images/barbers', exist_ok=True)
