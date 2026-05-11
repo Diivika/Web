@@ -20,7 +20,7 @@ import shutil
 from datetime import time
 
 os.makedirs('db', exist_ok=True)
-db_session.global_init("db/beatyweb.db")
+db_session.global_init(os.path.join(os.path.dirname(__file__), 'db', 'beatyweb.db'))
 db_sess = db_session.create_session()
 app = Flask(__name__, template_folder='static/templates')
 api = Api(app)
@@ -400,6 +400,6 @@ def finish_record(record_id):
 
 if __name__ == '__main__':
     os.makedirs('static/images/barbers', exist_ok=True)
-    db_session.global_init("db/beatyweb.db")
+    db_session.global_init(os.path.join(os.path.dirname(__file__), 'db', 'beatyweb.db'))
     app.register_blueprint(barbers_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
