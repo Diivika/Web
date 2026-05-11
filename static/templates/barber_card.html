@@ -3,138 +3,236 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <!-- Левая колонка - профиль -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="border: none; border-radius: 15px; overflow: hidden;">
-                <div class="text-center text-white p-4" style="background: linear-gradient(135deg, #2c3e50, #1a252f);">
-                    <div style="width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+        <!-- Боковая панель -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow" style="border: none; border-radius: 15px;">
+                <div class="card-header text-white text-center" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge"></i> Профиль барбера
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #2c3e50, #1a252f); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
                         <i class="bi bi-person fs-1 text-white"></i>
                     </div>
-                    <h4 class="mb-1">{{ barber.name }} {{ barber.surname }}</h4>
-                    <p class="mb-0"><i class="bi bi-envelope"></i> {{ barber.email }}</p>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span><i class="bi bi-calendar"></i> Всего записей:</span>
-                        <strong>{{ records|length }}</strong>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span><i class="bi bi-clock-history"></i> Предстоит:</span>
-                        <strong class="text-success">{{ records|length }}</strong>
-                    </div>
+                    <h4>{{ barber.name }} {{ barber.surname }}</h4>
+                    <p class="text-muted">
+                        <i class="bi bi-envelope"></i> {{ barber.email }}
+                    </p>
                     <hr>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100">
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm w-100">
                         <i class="bi bi-box-arrow-right"></i> Выйти
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Правая колонка - записи -->
-        <div class="col-md-8">
-            <div class="card shadow-sm" style="border: none; border-radius: 15px;">
-                <div class="card-header bg-white border-0 pt-4 pb-0">
+        <!-- Основной контент -->
+        <div class="col-md-9">
+            <!-- Непринятые записи -->
+            <div class="card shadow mb-4" style="border: none; border-radius: 15px;">
+                <div class="card-header text-white" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #e67e22 0%, #d35400 100%) !important;">
                     <h5 class="mb-0">
-                        <i class="bi bi-calendar-check text-primary"></i> Активные записи
-                        <span class="badge bg-primary rounded-pill ms-2">{{ records|length }}</span>
+                        <i class="bi bi-clock-history"></i> Ожидают подтверждения ({{ records|selectattr('is_accepted', 'equalto', False)|list|length }})
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if records %}
-                        {% for record in records %}
-                        <div class="border rounded p-3 mb-3 hover-shadow" style="transition: all 0.3s;">
-                            <div class="row align-items-center">
-                                <div class="col-md-5">
-                                    <div class="fw-bold">
-                                        <i class="bi bi-clock text-primary"></i>
-                                        {{ record.date_time.strftime('%d.%m.%Y') }}
-                                    </div>
-                                    <div class="text-muted small">
-                                        <i class="bi bi-hourglass-split"></i> {{ record.date_time.strftime('%H:%M') }}
+                    {% set pending = records|selectattr('is_accepted', 'equalto', False)|list %}
+                    {% if pending %}
+                        <div class="list-group">
+                            {% for record in pending %}
+                                <div class="list-group-item mb-2 rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>
+                                                <i class="bi bi-clock"></i> {{ record.date_time.strftime('%d.%m.%Y в %H:%M') }}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> Клиент: {{ record.client_name or 'Не указан' }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-telephone"></i> Телефон: {{ record.client_phone or 'Не указан' }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-scissors"></i> Услуга:
+                                                {% if record.category %}
+                                                    {% for cat in record.category %}
+                                                        {{ cat.name }}{% if not loop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    Не выбрана
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-success mb-1" onclick="acceptRecord({{ record.id }})">
+                                                <i class="bi bi-check-circle"></i> Принять
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="rejectRecord({{ record.id }})">
+                                                <i class="bi bi-x-circle"></i> Отклонить
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div>
-                                        <i class="bi bi-person"></i>
-                                        <span class="fw-bold">Клиент ID: {{ record.user_id }}</span>
-                                    </div>
-                                    <div class="small text-muted">
-                                        <i class="bi bi-scissors"></i>
-                                        {% if record.category %}
-                                            {% for cat in record.category %}
-                                                {{ cat.name }}{% if not loop.last %}, {% endif %}
-                                            {% endfor %}
-                                        {% else %}
-                                            Услуга не выбрана
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-end">
-                                    <button class="btn btn-sm btn-outline-success" onclick="completeRecord({{ record.id }})">
-                                        <i class="bi bi-check-circle"></i> Выполнено
-                                    </button>
-                                </div>
-                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     {% else %}
-                        <div class="text-center py-5">
+                        <div class="text-center py-4">
                             <i class="bi bi-inbox fs-1 text-muted"></i>
-                            <p class="text-muted mt-2 mb-0">Нет активных записей</p>
-                            <small class="text-muted">Записи появятся здесь после бронирования клиентов</small>
+                            <p class="text-muted mt-2">Нет записей, ожидающих подтверждения</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Быстрая статистика -->
-            <div class="row mt-4">
-                <div class="col-6">
-                    <div class="card shadow-sm text-center">
-                        <div class="card-body py-3">
-                            <i class="bi bi-people fs-3 text-primary"></i>
-                            <h3 class="mb-0">0</h3>
-                            <small class="text-muted">Сегодня записей</small>
-                        </div>
-                    </div>
+            <!-- Принятые активные записи -->
+            <div class="card shadow mb-4" style="border: none; border-radius: 15px;">
+                <div class="card-header text-white" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-check"></i> Активные записи ({{ records|selectattr('is_accepted', 'equalto', True)|selectattr('is_finished', 'equalto', False)|list|length }})
+                    </h5>
                 </div>
-                <div class="col-6">
-                    <div class="card shadow-sm text-center">
-                        <div class="card-body py-3">
-                            <i class="bi bi-star fs-3 text-warning"></i>
-                            <h3 class="mb-0">5.0</h3>
-                            <small class="text-muted">Рейтинг</small>
+                <div class="card-body">
+                    {% set active = records|selectattr('is_accepted', 'equalto', True)|selectattr('is_finished', 'equalto', False)|list %}
+                    {% if active %}
+                        <div class="list-group">
+                            {% for record in active %}
+                                <div class="list-group-item mb-2 rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>
+                                                <i class="bi bi-clock"></i> {{ record.date_time.strftime('%d.%m.%Y в %H:%M') }}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> Клиент: {{ record.client_name or 'Не указан' }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-telephone"></i> Телефон: {{ record.client_phone or 'Не указан' }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-scissors"></i> Услуга:
+                                                {% if record.category %}
+                                                    {% for cat in record.category %}
+                                                        {{ cat.name }}{% if not loop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    Не выбрана
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-primary" onclick="finishRecord({{ record.id }})">
+                                                <i class="bi bi-check2-circle"></i> Завершить
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                    </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Нет активных записей</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Завершённые записи -->
+            <div class="card shadow" style="border: none; border-radius: 15px;">
+                <div class="card-header text-white" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #7f8c8d 0%, #6c7a7a 100%) !important;">
+                    <h5 class="mb-0">
+                        <i class="bi bi-check-all"></i> Завершённые записи ({{ records|selectattr('is_finished', 'equalto', True)|list|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% set finished = records|selectattr('is_finished', 'equalto', True)|list %}
+                    {% if finished %}
+                        <div class="list-group">
+                            {% for record in finished %}
+                                <div class="list-group-item mb-2 rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>
+                                                <i class="bi bi-clock"></i> {{ record.date_time.strftime('%d.%m.%Y в %H:%M') }}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> Клиент: {{ record.client_name or 'Не указан' }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-telephone"></i> Телефон: {{ record.client_phone or 'Не указан' }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-scissors"></i> Услуга:
+                                                {% if record.category %}
+                                                    {% for cat in record.category %}
+                                                        {{ cat.name }}{% if not loop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    Не выбрана
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-check-lg"></i> Завершено
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-archive fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Нет завершённых записей</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.hover-shadow:hover {
-    background-color: #f8f9fa;
-    transform: translateX(5px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-</style>
-
 <script>
-function completeRecord(recordId) {
-    if (confirm('Отметить запись как выполненную?')) {
-        fetch(`/complete_record/${recordId}`, { method: 'POST' })
+function acceptRecord(recordId) {
+    if (confirm('Принять запись?')) {
+        fetch(`/accept_record/${recordId}`, { method: 'POST' })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Ошибка при выполнении');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Произошла ошибка');
+                if (data.success) location.reload();
+                else alert('Ошибка');
+            });
+    }
+}
+
+function rejectRecord(recordId) {
+    if (confirm('Отклонить запись? Она будет удалена из базы.')) {
+        fetch(`/reject_record/${recordId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert('Ошибка');
+            });
+    }
+}
+
+function finishRecord(recordId) {
+    if (confirm('Завершить запись?')) {
+        fetch(`/finish_record/${recordId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert('Ошибка');
             });
     }
 }

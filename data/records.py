@@ -14,3 +14,9 @@ class Record(SqlAlchemyBase, UserMixin, SerializerMixin):
     category = orm.relationship("Category",
                                   secondary="association",
                                   backref="records")
+    barber_id = sqlalchemy.Column(sqlalchemy.Integer)
+    is_finished = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
+    is_accepted = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
+    client_phone = sqlalchemy.Column(sqlalchemy.String)
+    name = sqlalchemy.Column(sqlalchemy.String)
+    surname = sqlalchemy.Column(sqlalchemy.String)

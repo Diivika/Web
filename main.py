@@ -17,7 +17,9 @@ from forms.record_user_form import RecordForm
 from forms.register_barber_form import RegisterBarberForm
 from forms.register_user_form import RegisterUserForm
 import shutil
+from datetime import time
 
+os.makedirs('db', exist_ok=True)
 db_session.global_init("db/beatyweb.db")
 db_sess = db_session.create_session()
 app = Flask(__name__, template_folder='static/templates')
@@ -119,25 +121,63 @@ def book():
         db_sess = db_session.create_session()
         categories = db_sess.query(Category).all()
         form.category.choices = [(c.id, c.name) for c in categories]
+        barbers = db_sess.query(Barber).filter(Barber.is_barber == True).all()
+        form.barber.choices = [(b.id, f'{b.name} {b.surname}') for b in barbers]
         if request.method == 'POST' and form.validate_on_submit():
             try:
+                date_time = form.date_time.data
+                weekday = date_time.weekday()
+                hour = date_time.hour
+                minute = date_time.minute
+                if date_time <= datetime.datetime.now():
+                    flash('Нельзя записаться на прошедшее время', 'danger')
+                    return render_template('record_user.html', title='Запись', form=form, styles=categories,
+                                           barbers=barbers)
+                if minute != 0:
+                    flash('Запись возможна только в начале часа (например, 10:00, 11:00, 12:00)', 'danger')
+                    return render_template('record_user.html', title='Запись', form=form, styles=categories,
+                                           barbers=barbers)
+                if weekday <= 4:
+                    if hour < 10 or (hour == 21 and minute > 0) or hour >= 21:
+                        flash('ПН-ПТ мы работаем с 10:00 до 21:00', 'danger')
+                        return render_template('record_user.html', title='Запись', form=form, styles=categories,
+                                               barbers=barbers)
+                else:
+                    if hour < 11 or (hour == 20 and minute > 0) or hour >= 20:
+                        flash('СБ-ВС мы работаем с 11:00 до 20:00', 'danger')
+                        return render_template('record_user.html', title='Запись', form=form, styles=categories,
+                                               barbers=barbers)
+                existing = db_sess.query(Record).filter(
+                    Record.barber_id == form.barber.data,
+                    Record.date_time == date_time,
+                    Record.is_accepted != False
+                ).first()
+                if existing:
+                    flash('Это время уже занято, выберите другое', 'danger')
+                    return render_template('record_user.html', title='Запись', form=form, styles=categories,
+                                           barbers=barbers)
                 record = Record(
-                    date_time=form.date_time.data,
+                    date_time=date_time,
                     user_id=current_user.id,
+                    barber_id=form.barber.data,
+                    client_phone=form.client_phone.data,
+                    name=current_user.name,
+                    surname=current_user.surname
                 )
-                category = db_sess.query(Category).get(form.category.data)
+                category = db_sess.get(Category, form.category.data)
                 if category:
                     record.category.append(category)
                 db_sess.add(record)
                 db_sess.commit()
                 flash('Запись успешно создана!', 'success')
-                return redirect('/')
+                return redirect('/usercard')
+
             except Exception as e:
                 db_sess.rollback()
                 print(e)
                 flash('Произошла ошибка при создании записи', 'danger')
 
-        return render_template('record_user.html', title='Запись', form=form, styles=categories)
+        return render_template('record_user.html', title='Запись', form=form, styles=categories, barbers=barbers)
     else:
         return render_template('error_book.html', title='Error')
 
@@ -236,9 +276,9 @@ def barber_card():
     db_sess = db_session.create_session()
     now = datetime.datetime.now()
     records = db_sess.query(Record).filter(
+        Record.barber_id == current_user.id,
         Record.date_time > now
     ).all()
-
     return render_template('barber_card.html',
                            barber=current_user,
                            records=records)
@@ -318,9 +358,48 @@ def delete_barber(barber_id):
         return render_template('error_500.html', title='Error 500')
 
 
+@app.route('/accept_record/<int:record_id>', methods=['POST'])
+@login_required
+def accept_record(record_id):
+    if not current_user.is_barber:
+        return jsonify({'success': False, 'error': 'Доступ запрещён'})
+    db_sess = db_session.create_session()
+    record = db_sess.query(Record).get(record_id)
+    if record and record.barber_id == current_user.id:
+        record.is_accepted = True
+        db_sess.commit()
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Запись не найдена'})
+
+
+@app.route('/reject_record/<int:record_id>', methods=['POST'])
+@login_required
+def dreject_record(record_id):
+    if not current_user.is_barber:
+        return jsonify({'success': False, 'error': 'Доступ запрещён'})
+    db_sess = db_session.create_session()
+    record = db_sess.query(Record).get(record_id)
+    if record and record.barber_id == current_user.id:
+        db_sess.delete(record)
+        db_sess.commit()
+        return jsonify({'success': True})
+
+@app.route('/finish_record/<int:record_id>', methods=['POST'])
+@login_required
+def finish_record(record_id):
+    if not current_user.is_barber:
+        return jsonify({'success': False, 'error': 'Доступ запрещён'})
+    db_sess = db_session.create_session()
+    record = db_sess.query(Record).get(record_id)
+    if record and record.barber_id == current_user.id:
+        record.is_finished = True
+        db_sess.commit()
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Запись не найдена'})
+
+
 if __name__ == '__main__':
     os.makedirs('static/images/barbers', exist_ok=True)
-    os.makedirs('db', exist_ok=True)
     db_session.global_init("db/beatyweb.db")
     app.register_blueprint(barbers_api.blueprint)
     app.run(port=8080, host='127.0.0.1')

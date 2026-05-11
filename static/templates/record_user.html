@@ -12,7 +12,7 @@
                     </h4>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST">
+                    <form method="POST" id="bookingForm">
                         {{ form.hidden_tag() }}
 
                         <div class="mb-3">
@@ -29,9 +29,28 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">
+                                <i class="bi bi-person-badge"></i> Выберите мастера
+                            </label>
+                            <select name="barber" class="form-select form-control-lg" required>
+                                <option value="">-- Выберите мастера --</option>
+                                {% for barber in barbers %}
+                                    <option value="{{ barber.id }}">{{ barber.name }} {{ barber.surname }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
                                 <i class="bi bi-calendar"></i> Дата и время
                             </label>
-                            <input type="datetime-local" name="date_time" class="form-control form-control-lg" required>
+                            <input type="datetime-local" name="date_time" id="datetimeInput" class="form-control form-control-lg" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-telephone"></i> Ваш телефон
+                            </label>
+                            <input type="tel" name="client_phone" class="form-control form-control-lg" placeholder="+7 (999) 123-45-67" required>
                         </div>
 
                         {% if message %}
@@ -46,6 +65,7 @@
             </div>
         </div>
 
+        <!-- Правая колонка - галерея -->
         <div class="col-md-7 mb-4">
             <div class="card shadow" style="border: none; border-radius: 15px;">
                 <div class="card-header text-white" style="border-radius: 15px 15px 0 0; background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;">
@@ -100,12 +120,6 @@
         border: 2px solid #0d6efd !important;
         box-shadow: 0 5px 15px rgba(13,110,253,0.2) !important;
     }
-
-    .carousel-caption {
-        background: rgba(0,0,0,0.5);
-        border-radius: 10px;
-        padding: 10px;
-    }
 </style>
 
 <script>
@@ -128,14 +142,59 @@
         });
     });
 
-    // Минимальная дата - завтра
-    const datetimeInput = document.querySelector('input[type="datetime-local"]');
+    const datetimeInput = document.getElementById('datetimeInput');
+
+    function isWorkingHours(date) {
+        const dayOfWeek = date.getDay();
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+
+        if (minutes !== 0) {
+            return { valid: false, message: 'Запись возможна только в начале часа (например, 10:00, 11:00, 12:00)' };
+        }
+
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            if (hours < 10 || (hours === 21 && minutes > 0) || hours > 21) {
+                return { valid: false, message: 'В ПН-ПТ мы работаем с 10:00 до 21:00' };
+            }
+        } else {
+            if (hours < 11 || (hours === 20 && minutes > 0) || hours > 20) {
+                return { valid: false, message: 'В выходные мы работаем с 11:00 до 20:00' };
+            }
+        }
+
+        if (date < new Date()) {
+            return { valid: false, message: 'Нельзя записаться на прошедшее время' };
+        }
+
+        return { valid: true };
+    }
+
+    function validateDateTime() {
+        if (!datetimeInput.value) return true;
+
+        const selected = new Date(datetimeInput.value);
+        const result = isWorkingHours(selected);
+
+        if (!result.valid) {
+            alert(result.message);
+            datetimeInput.value = '';
+            return false;
+        }
+        return true;
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        if (!validateDateTime()) {
+            e.preventDefault();
+        }
+    });
+
     if (datetimeInput) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(10, 0, 0, 0);
-        const minDateTime = tomorrow.toISOString().slice(0, 16);
-        datetimeInput.min = minDateTime;
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        datetimeInput.min = now.toISOString().slice(0, 16);
+        datetimeInput.addEventListener('change', validateDateTime);
     }
 </script>
 {% endblock %}

@@ -21,3 +21,14 @@ def get_barbers():
                  for item in barbers]
         }
     )
+
+@blueprint.route('/api/barbers/<int:barber_id>')
+def get_barber(barber_id):
+    db_sess = db_session.create_session()
+    barber = db_sess.query(Barber).get(barber_id)
+    return jsonify(
+        {
+            'barber':
+                barber.to_dict(only=('id', 'surname', 'name', 'image', 'info'))
+        }
+    )

@@ -13,79 +13,123 @@
                 <div class="card-body p-4">
                     <!-- Информация о пользователе -->
                     <div class="text-center mb-4">
+                        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #2c3e50, #1a252f); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                            <i class="bi bi-person fs-1 text-white"></i>
+                        </div>
                         <h3>{{ user.name }} {{ user.surname }}</h3>
-                        <p class="text-muted">{{ user.email }}</p>
+                        <p class="text-muted">
+                            <i class="bi bi-envelope"></i> {{ user.email }}
+                        </p>
+                        <p class="text-muted">
+                            <i class="bi bi-calendar"></i> На сайте с: {{ user.modified_date.strftime('%d.%m.%Y') if user.modified_date else 'Не указана' }}
+                        </p>
                     </div>
 
                     <hr>
 
                     <!-- Активные записи -->
-                    <h5 class="mb-3">
-                        <i class="bi bi-calendar-check text-success"></i> Активные записи
-                        <span class="badge bg-success">{{ active_records|length }}</span>
-                    </h5>
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="bi bi-calendar-check text-success"></i> Активные записи
+                            <span class="badge bg-success">{{ active_records|length }}</span>
+                        </h5>
 
-                    {% if active_records %}
-                        <div class="list-group mb-4">
-                            {% for record in active_records %}
-                                <div class="list-group-item list-group-item-success">
+                        {% if active_records %}
+                            <div class="list-group">
+                                {% for record in active_records %}
+                                <div class="list-group-item mb-2 rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="flex-grow-1">
+                                            <strong>
+                                                <i class="bi bi-scissors"></i>
+                                                {% if record.category %}
+                                                    {% for cat in record.category %}
+                                                        {{ cat.name }}{% if not loop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    Услуга не выбрана
+                                                {% endif %}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar"></i> {{ record.date_time.strftime('%d.%m.%Y в %H:%M') }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-person-badge"></i> Мастер: {{ record.barber_id or 'Не назначен' }}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            {% if not record.is_accepted %}
+                                                <span class="badge bg-warning text-dark">Ожидает подтверждения</span>
+                                            {% elif record.is_accepted and not record.is_finished %}
+                                                <span class="badge bg-success">Подтверждена</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Завершена</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 bg-light rounded">
+                                <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                                <p class="text-muted mt-2 mb-0">Нет активных записей</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- История записей (завершённые) -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="bi bi-clock-history text-secondary"></i> История записей
+                            <span class="badge bg-secondary">{{ inactive_records|length }}</span>
+                        </h5>
+
+                        {% if inactive_records %}
+                            <div class="list-group">
+                                {% for record in inactive_records %}
+                                <div class="list-group-item list-group-item-secondary mb-2 rounded">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <strong>
                                                 <i class="bi bi-scissors"></i>
-                                                {% for cat in record.category %}
-                                                    {{ cat.name }}{% if not loop.last %}, {% endif %}
-                                                {% endfor %}
+                                                {% if record.category %}
+                                                    {% for cat in record.category %}
+                                                        {{ cat.name }}{% if not loop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    Услуга не выбрана
+                                                {% endif %}
                                             </strong>
                                             <br>
                                             <small>
-                                                <i class="bi bi-calendar"></i> {{ record.date_time.strftime('%d.%m.%Y %H:%M') }}
+                                                <i class="bi bi-calendar"></i> {{ record.date_time.strftime('%d.%m.%Y в %H:%M') }}
+                                            </small>
+                                            <br>
+                                            <small>
+                                                <i class="bi bi-person-badge"></i> Мастер: {{ record.barber_id or 'Не назначен' }}
                                             </small>
                                         </div>
-                                        <span class="badge bg-success">Предстоит</span>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info">Нет активных записей</div>
-                    {% endif %}
-
-                    <!-- Неактивные записи (прошедшие) -->
-                    <h5 class="mb-3">
-                        <i class="bi bi-clock-history text-secondary"></i> История записей
-                        <span class="badge bg-secondary">{{ inactive_records|length }}</span>
-                    </h5>
-
-                    {% if inactive_records %}
-                        <div class="list-group">
-                            {% for record in inactive_records %}
-                                <div class="list-group-item list-group-item-secondary">
-                                    <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>
-                                                <i class="bi bi-scissors"></i>
-                                                {% for cat in record.category %}
-                                                    {{ cat.name }}{% if not loop.last %}, {% endif %}
-                                                {% endfor %}
-                                            </strong>
-                                            <br>
-                                            <small>
-                                                <i class="bi bi-calendar"></i> {{ record.date_time.strftime('%d.%m.%Y %H:%M') }}
-                                            </small>
+                                            <span class="badge bg-secondary">Завершена</span>
                                         </div>
-                                        <span class="badge bg-secondary">Выполнена</span>
                                     </div>
                                 </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-secondary">Нет завершённых записей</div>
-                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 bg-light rounded">
+                                <i class="bi bi-archive fs-1 text-muted"></i>
+                                <p class="text-muted mt-2 mb-0">История записей пуста</p>
+                            </div>
+                        {% endif %}
+                    </div>
 
-                    <!-- Кнопки -->
+                    <!-- Кнопки действий -->
                     <div class="text-center mt-4">
-                        <a href="{{ url_for('book') }}" class="btn btn-primary">
+                        <a href="{{ url_for('book') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #2c3e50, #1a252f); border: none;">
                             <i class="bi bi-plus-circle"></i> Новая запись
                         </a>
                         <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
