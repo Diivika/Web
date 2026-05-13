@@ -25,7 +25,7 @@ class Barber(SqlAlchemyBase, UserMixin, SerializerMixin):
     info = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     # telegram_tag = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    # telegram_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    telegram_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)

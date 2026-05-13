@@ -56,7 +56,12 @@
                                             </small>
                                             <br>
                                             <small class="text-muted">
-                                                <i class="bi bi-person-badge"></i> Мастер: {{ record.barber_id or 'Не назначен' }}
+                                                <i class="bi bi-person-badge"></i> Мастер:
+                                                {% if record.barber %}
+                                                    {{ record.barber.name }} {{ record.barber.surname }}
+                                                {% else %}
+                                                    Не назначен
+                                                {% endif %}
                                             </small>
                                         </div>
                                         <div>
@@ -80,7 +85,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- История записей (завершённые) -->
+                    <!-- История записей -->
                     <div class="mb-4">
                         <h5 class="mb-3">
                             <i class="bi bi-clock-history text-secondary"></i> История записей
@@ -109,7 +114,12 @@
                                             </small>
                                             <br>
                                             <small>
-                                                <i class="bi bi-person-badge"></i> Мастер: {{ record.barber_id or 'Не назначен' }}
+                                                <i class="bi bi-person-badge"></i> Мастер:
+                                                {% if record.barber %}
+                                                    {{ record.barber.name }} {{ record.barber.surname }}
+                                                {% else %}
+                                                    Не назначен
+                                                {% endif %}
                                             </small>
                                         </div>
                                         <div>
@@ -117,8 +127,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                {% endfor %}
-                            </div>
+                            {% endfor %}
                         {% else %}
                             <div class="text-center py-4 bg-light rounded">
                                 <i class="bi bi-archive fs-1 text-muted"></i>

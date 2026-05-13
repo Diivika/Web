@@ -10,13 +10,15 @@ class Record(SqlAlchemyBase, UserMixin, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     date_time = sqlalchemy.Column(sqlalchemy.DateTime)
-    user_id = sqlalchemy.Column(sqlalchemy.Integer)
+    user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'))
     category = orm.relationship("Category",
                                   secondary="association",
                                   backref="records")
-    barber_id = sqlalchemy.Column(sqlalchemy.Integer)
+    barber_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('barbers.id'))
+    barber = orm.relationship('Barber', foreign_keys=[barber_id])
     is_finished = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
     is_accepted = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
     client_phone = sqlalchemy.Column(sqlalchemy.String)
     name = sqlalchemy.Column(sqlalchemy.String)
     surname = sqlalchemy.Column(sqlalchemy.String)
+    user = orm.relationship('User', foreign_keys=[user_id])
