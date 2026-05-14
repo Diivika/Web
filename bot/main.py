@@ -17,10 +17,9 @@ bot = telebot.TeleBot(API_TOKEN)
 @bot.message_handler(commands=['start'])
 def start(message):
     telegram_id = message.chat.id
-
     bot.send_message(
         telegram_id,
-        "Привет! Отправь своё имя из сайта для привязки аккаунта.\n"
+        "Привет! Отправь свой email для привязки аккаунта.\n"
         "Пример: /link your_email@example.com"
     )
 
@@ -28,7 +27,6 @@ def start(message):
 @bot.message_handler(commands=['link'])
 def link_account(message):
     telegram_id = message.chat.id
-
     try:
         email = message.text.split()[1]
     except IndexError:
@@ -49,7 +47,6 @@ def link_account(message):
 @bot.message_handler(commands=['my_bookings'])
 def my_bookings(message):
     telegram_id = str(message.chat.id)
-
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.telegram_id == telegram_id).first()
 
@@ -63,7 +60,7 @@ def my_bookings(message):
         bot.send_message(message.chat.id, "У вас пока нет записей")
         return
 
-    text = "📋 Ваши записи:\n"
+    text = "📋 Ваши записи:\n\n"
     for record in records:
         text += f"📅 {record.date_time}\n"
         text += "➖➖➖➖➖➖➖➖\n"
@@ -71,33 +68,34 @@ def my_bookings(message):
     bot.send_message(message.chat.id, text)
 
 
-@bot.message_handler(commands=['notifications'])
-def send_notification(message, message_text="у вас нету записей или ещё не скоро"):
-    telegram_id = message.chat.id
+def send_telegram_notification(telegram_id, message_text):
     try:
         if telegram_id:
-            bot.send_message(telegram_id, message_text)
+            bot.send_message(int(telegram_id), message_text)
+            return True
     except Exception as e:
         print(f"Ошибка отправки уведомления: {e}")
+        return False
 
 
 def notify_user_about_booking(user_id):
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == user_id).first()
-    record = db_sess.query(Record).filter(Record.user_id == user_id).order_by(Record.id.desc()).first()
+    record = db_sess.query(Record).filter(
+        Record.user_id == user_id
+    ).order_by(Record.id.desc()).first()
 
-    if user and user.telegram_id and user.notification_enabled and record:
+    if user and user.telegram_id and record:
         message = (
             f"🎉 Новая запись!\n\n"
-            f"📅 Дата: {record.date_time}\n"
+            f"📅 Дата: {record.date_time}\n\n"
             f"Спасибо за доверие!"
         )
-        send_notification(user.telegram_id, message)
+        send_telegram_notification(user.telegram_id, message)
 
 
 def check_and_send_reminders():
     db_sess = db_session.create_session()
-
     tomorrow = datetime.now() + timedelta(days=1)
 
     records = db_sess.query(Record).filter(
@@ -109,18 +107,18 @@ def check_and_send_reminders():
         user = db_sess.query(User).filter(User.id == record.user_id).first()
         if user and user.telegram_id:
             message = (
-                f"⏰ Напоминание!\n"
+                f"⏰ Напоминание!\n\n"
                 f"У вас завтра запись!\n"
-                f"📅 {record.date_time}\n"
+                f"📅 {record.date_time}\n\n"
                 f"Не забудьте!"
             )
-            send_notification(user.telegram_id, message)
+            send_telegram_notification(user.telegram_id, message)
             print(f"Напоминание отправлено пользователю {user.id}")
 
 
 def schedule_checker():
-    schedule.every().minute.do(notify_user_about_booking)
     schedule.every().hour.do(check_and_send_reminders)
+
     while True:
         schedule.run_pending()
         time.sleep(60)
@@ -133,6 +131,5 @@ if __name__ == '__main__':
     reminder_thread.daemon = True
     reminder_thread.start()
 
-    print("Бот запущен с напоминаниями")
-
+    print("✅ Бот запущен с напоминаниями")
     bot.polling(none_stop=True, timeout=30)
