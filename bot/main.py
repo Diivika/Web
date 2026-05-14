@@ -119,6 +119,7 @@ def check_and_send_reminders():
 
 
 def schedule_checker():
+    schedule.every().minute.do(notify_user_about_booking)
     schedule.every().hour.do(check_and_send_reminders)
     while True:
         schedule.run_pending()
