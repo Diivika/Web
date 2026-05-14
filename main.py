@@ -261,8 +261,7 @@ def location():
 @app.route('/barbers', methods=['GET', 'POST'])
 def barbers():
     try:
-        data = get(f'http://localhost:8080/api/barbers').json()
-        barbers_list = data.get('barbers', [])
+        barbers_list = db_sess.query(Barber).all()
         return render_template('barbers.html', barbers=barbers_list)
     except Exception:
         return render_template('error_500.html', title='Error 500')
@@ -374,7 +373,7 @@ def accept_record(record_id):
 
 @app.route('/reject_record/<int:record_id>', methods=['POST'])
 @login_required
-def dreject_record(record_id):
+def reject_record(record_id):
     if not current_user.is_barber:
         return jsonify({'success': False, 'error': 'Доступ запрещён'})
     db_sess = db_session.create_session()
