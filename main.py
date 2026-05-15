@@ -7,6 +7,8 @@ from flask_login import LoginManager, login_user
 from flask_login import login_required, logout_user, current_user
 from flask_restful import Api
 from werkzeug.utils import secure_filename
+
+from bot.main import notify_user_about_booking
 from data import db_session, barbers_api
 from data.users import User
 from data.records import Record
@@ -169,6 +171,7 @@ def book():
                     record.category.append(category)
                 db_sess.add(record)
                 db_sess.commit()
+                notify_user_about_booking(current_user.id)
                 flash('Запись успешно создана!', 'success')
                 return redirect('/usercard')
 
@@ -261,7 +264,8 @@ def location():
 @app.route('/barbers', methods=['GET', 'POST'])
 def barbers():
     try:
-        barbers_list = db_sess.query(Barber).all()
+        data = get(f'http://localhost:8080/api/barbers').json()
+        barbers_list = data.get('barbers', [])
         return render_template('barbers.html', barbers=barbers_list)
     except Exception:
         return render_template('error_500.html', title='Error 500')
@@ -373,7 +377,7 @@ def accept_record(record_id):
 
 @app.route('/reject_record/<int:record_id>', methods=['POST'])
 @login_required
-def reject_record(record_id):
+def dreject_record(record_id):
     if not current_user.is_barber:
         return jsonify({'success': False, 'error': 'Доступ запрещён'})
     db_sess = db_session.create_session()
