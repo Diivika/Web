@@ -189,8 +189,8 @@ def usercard():
         records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()
         all_records = db_sess.query(Record).filter(Record.user_id == current_user.id).all()
         now = datetime.datetime.now()
-        active_records = [r for r in all_records if r.date_time > now]
-        inactive_records = [r for r in all_records if r.date_time <= now]
+        active_records = [r for r in all_records if r.date_time > now and not r.is_finished]
+        inactive_records = [r for r in all_records if r.date_time <= now or r.is_finished]
         return render_template('usercard.html',
                                user=current_user,
                                active_records=active_records,
